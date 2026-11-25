@@ -45,6 +45,24 @@ const MAX_CHARS = 140;
 // can be exercised against a scratch path during local verification.
 const OUT_PATH = process.argv[2] ?? "/output/entry.txt";
 
+// The entry must be a single line: reject it outright if it ever
+// contains a newline, instead of letting a multi-line entry slip
+// through to the grader.
+if (TEXT.includes("\n") || TEXT.includes("\r")) {
+  throw new Error(
+    `invalid entry ${JSON.stringify(TEXT)}: must be a single line, no newline characters allowed`,
+  );
+}
+
+// The gate counts ASCII characters, so the entry's character count
+// must equal its UTF-8 byte length — any multi-byte character would
+// make the two disagree and must fail loudly here.
+if (TEXT.length !== Buffer.byteLength(TEXT, "utf8")) {
+  throw new Error(
+    `invalid entry ${JSON.stringify(TEXT)}: ${TEXT.length} characters but ${Buffer.byteLength(TEXT, "utf8")} UTF-8 bytes, entry must be pure ASCII`,
+  );
+}
+
 // Validate the entry before writing anything: plain ASCII, 1 to 140
 // characters, not only white space. Anything else fails loudly instead
 // of shipping an invalid entry.
